@@ -10,6 +10,8 @@ Filters= (
     ('images', 'Images'),
     ('audios', 'Audios'),
     ('videos', 'Videos'),
+    ('documents', 'Documents'),
+
 )
 
 

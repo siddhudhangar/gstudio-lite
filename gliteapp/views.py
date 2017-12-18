@@ -48,11 +48,12 @@ def search(request):
             Search = form.cleaned_data['SearchText']
             filter_field = form.cleaned_data['filter_field']
             Search.encode('utf8')
-            es = Elasticsearch()
+            es = Elasticsearch('http://10.1.0.229:9200')
             print(filter_field)
-            res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query": {"multi_match":{ "query": Search, "fields": [ "name", "tags","content" ] }}})
+            res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query": {"multi_match":{ "query": Search, "fields": [ "name", "tags","content" ] }}} ,scroll="10m",size="100")
             #print("%d documents found:" % res['hits']['total'])
             doc={}
+
             for doc in res['hits']['hits']:
                 print("%s) %s" % (doc['_id'], doc['_source']['content']))
             return render(request, 'search.html', {'hits':res['hits']['hits'],'total_hits': res['hits']['total'],'form': form})

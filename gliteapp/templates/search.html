@@ -1,6 +1,6 @@
 {% load new_tags %}
 {% load static %}
-
+{% load mathfilters %}
 
 <!DOCTYPE html>
 <html lang="en" >
@@ -32,17 +32,16 @@
                 <input type="submit" value="Search" />
 
     </form>
-
+    <!--total_hits|div:5|floatformat:"0"-->
     <table>
         <tr><td>documents found: {{total_hits}}</td></tr>
 
-         <tr>
-             {% for doc in hits %}
 
+             {% for doc in hits %}
 
             <!--<td> ID :{{ doc|get:"_id" }}</td><td>content: {{ doc|get:"_source"|get:"content"}} </td>-->
 
-            {% with doc|get:"_source"|get:"if_file"|get:"thumbnail"|get:"relurl" as thumbnail %}
+                {% with doc|get:"_source"|get:"if_file"|get:"thumbnail"|get:"relurl" as thumbnail %}
                 {% with doc|get:"_source"|get:"if_file"|get:"original"|get:"relurl" as original %}
                 {% with doc|get:"_source"|get:"if_file"|get:"mime_type" as mime_type %}
                 {% endwith%}
@@ -59,11 +58,18 @@
                 <td><a href="{% static original %}"><img src="{% static thumbnail %}" /><br/>{{ doc|get:"_source"|get:"name"}}</a></td>
                 {% endif %}
                 {% endwith %}
-             {% endwith%}
-             {% endwith%}
-             {% endwith %}
+                {% endwith%}
+                {% endwith%}
+                {% endwith %}
+                {% if forloop.counter|divisibleby:5 %}
+                </tr>
+                <tr>
+                        {% endif %}
+
+
 
             {% endfor%}
+
         </tr>
 
     </table>
