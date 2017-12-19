@@ -45,13 +45,23 @@ def search(request):
     if request.method=='POST':
         form = SearchTextForm(request.POST)
         if form.is_valid():
-            Search = form.cleaned_data['SearchText']
-            filter_field = form.cleaned_data['filter_field']
-            Search.encode('utf8')
             es = Elasticsearch('http://10.1.0.229:9200')
-            print(filter_field)
-            res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query": {"multi_match":{ "query": Search, "fields": [ "name", "tags","content" ] }}} ,scroll="10m",size="100")
+
+            Search = form.cleaned_data['SearchText']
+            Search.encode('utf8')
+            filter_field = form.cleaned_data['filter_field']
+            educational_filter_field = form.cleaned_data['educational_filter_field']
+
+            if educational_filter_field == 'sel':
+
+                res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query":   { "multi_match":{ "query": Search, "fields": [ "name", "tags","content" ]}  } }
+                            ,scroll="10m",size="100")
             #print("%d documents found:" % res['hits']['total'])
+
+
+
+            else:
+                res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query": {"bool": {"must":[{"term": { "attribute_set.educationallevel": educational_filter_field }},{"multi_match": {"query": Search, "fields": ["name", "tags", "content"]}}]}}}, scroll="10m", size="100")
             doc={}
 
             for doc in res['hits']['hits']:
