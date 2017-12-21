@@ -44,6 +44,7 @@ def view_json(request):
 def search(request):
     if request.method=='POST':
         form = SearchTextForm(request.POST)
+
         if form.is_valid():
             es = Elasticsearch('http://10.1.0.229:9200')
 
@@ -51,21 +52,64 @@ def search(request):
             Search.encode('utf8')
             filter_field = form.cleaned_data['filter_field']
             educational_filter_field = form.cleaned_data['educational_filter_field']
+            target_group_filter_field = form.cleaned_data['target_group_filter_field']
+            source_filter_field = form.cleaned_data['source_filter_field']
+            language_filter_field = form.cleaned_data['language_filter_field']
+            educationalsubject_filter_field = form.cleaned_data['educationalsubject_filter_field']
 
-            if educational_filter_field == 'sel':
+            allfilters={"filter_field":filter_field,"educational_filter_field":educational_filter_field ,"target_group_filter_field":target_group_filter_field,"source_filter_field":source_filter_field
+                        ,"language_filter_field":language_filter_field, "educationalsubject_filter_field":educationalsubject_filter_field}
+            selected_filters={}
 
-                res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query":   { "multi_match":{ "query": Search, "fields": [ "name", "tags","content" ]}  } }
+            temp = ''
+
+            if filter_field == 'all' :
+                filter_field=('audios','videos','images')
+
+            for key,value in allfilters.items():
+                if value !=  'sel' and value != 'stg' and value != 'ss' and value != 'sl' and value != 'ses':
+                    selected_filters.update({key:value})
+
+
+            for key,value in selected_filters.items():
+                if key == 'educational_filter_field' :
+                    temp_educational_filter_field='{"term":{"attribute_set.educationallevel":'+'"'+educational_filter_field+'"'+'}},'
+                    temp=temp+temp_educational_filter_field
+                    print(temp)
+                elif key == 'target_group_filter_field':
+                    temp_target_group_filter_field='{"term":{"attribute_set.audience":'+'"'+target_group_filter_field+'"'+'}},'
+                    temp=temp+temp_target_group_filter_field
+                elif key == 'source_filter_field':
+                    temp_source_filter_field = '{"term":{"attribute_set.source":' + '"' + source_filter_field + '"' + '}},'
+                    temp = temp + temp_source_filter_field
+                elif key == 'language_filter_field':
+                    temp_language_filter_field = '{"term":{"language":' + '"' + language_filter_field + '"' + '}},'
+                    temp = temp + temp_language_filter_field
+                elif key == 'educationalsubject_filter_field':
+                    temp_educationalsubject_filter_field = '{"term":{"attribute_set.educationalsubject":' + '"' + educationalsubject_filter_field + '"' + '}},'
+                    temp = temp + temp_educationalsubject_filter_field
+
+
+
+            if ((selected_filters['filter_field'] == 'all' or selected_filters['filter_field'] == 'videos' or selected_filters['filter_field'] == 'audios' or selected_filters['filter_field'] == 'documents' or selected_filters['filter_field'] == 'images')
+                 and educational_filter_field == 'sel' and target_group_filter_field == 'stg' and source_filter_field == 'ss' and language_filter_field == 'sl' and educationalsubject_filter_field == 'ses'):
+
+                res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query": { "multi_match":{ "query": Search, "fields": [ "name", "tags","content" ]}  } }
                             ,scroll="10m",size="100")
+
             #print("%d documents found:" % res['hits']['total'])
 
 
 
             else:
-                res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query": {"bool": {"must":[{"term": { "attribute_set.educationallevel": educational_filter_field }},{"multi_match": {"query": Search, "fields": ["name", "tags", "content"]}}]}}}, scroll="10m", size="100")
+                print(temp)
+                res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query": {"bool": {"must":[{"multi_match": {"query": Search, "fields": ["name", "tags", "content"]}}, {"term": { "status": "published" }}, eval(str(temp)) ]}}}, scroll="10m", size="100")
+
             doc={}
 
-            for doc in res['hits']['hits']:
-                print("%s) %s" % (doc['_id'], doc['_source']['content']))
+            #for doc in res['hits']['hits']:
+                #print("%s) %s" % (doc['_id'], doc['_source']['content']))
+             #   print()
             return render(request, 'search.html', {'hits':res['hits']['hits'],'total_hits': res['hits']['total'],'form': form})
     else:
         form = SearchTextForm()
