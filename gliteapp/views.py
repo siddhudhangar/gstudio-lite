@@ -49,6 +49,7 @@ def search(request):
             es = Elasticsearch('http://10.1.0.229:9200')
 
             Search = form.cleaned_data['SearchText']
+
             Search.encode('utf8')
             filter_field = form.cleaned_data['filter_field']
             educational_filter_field = form.cleaned_data['educational_filter_field']
@@ -91,19 +92,29 @@ def search(request):
 
 
 
-            if ((selected_filters['filter_field'] == 'all' or selected_filters['filter_field'] == 'videos' or selected_filters['filter_field'] == 'audios' or selected_filters['filter_field'] == 'documents' or selected_filters['filter_field'] == 'images')
+            if (( Search not in [None, ''] and selected_filters['filter_field'] == 'all' or selected_filters['filter_field'] == 'videos' or selected_filters['filter_field'] == 'audios' or selected_filters['filter_field'] == 'documents' or selected_filters['filter_field'] == 'images')
                  and educational_filter_field == 'sel' and target_group_filter_field == 'stg' and source_filter_field == 'ss' and language_filter_field == 'sl' and educationalsubject_filter_field == 'ses'):
 
                 res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query": { "multi_match":{ "query": Search, "fields": [ "name", "tags","content" ]}  } }
-                            ,scroll="10m",size="100")
+                            ,scroll="10m",size="30")
 
-            #print("%d documents found:" % res['hits']['total'])
+                #print("%d documents found:" % res['hits']['total'])
 
+            elif ( Search in [None, ''] ):
+                print('elif')
+                if ((selected_filters['filter_field'] == 'all' or selected_filters['filter_field'] == 'videos' or selected_filters['filter_field'] == 'audios' or selected_filters['filter_field'] == 'documents' or selected_filters['filter_field'] == 'images')
+                 and educational_filter_field == 'sel' and target_group_filter_field == 'stg' and source_filter_field == 'ss' and language_filter_field == 'sl' and educationalsubject_filter_field == 'ses'):
+                    res = es.search(index="gstudio-lite", doc_type=filter_field, body={
+                        "query": {"bool": {"must": [{"term": {"status": "published"}}]}}},
+                                    scroll="10m", size="30")
 
-
+                else:
+                    res = es.search(index="gstudio-lite", doc_type=filter_field, body={
+                        "query": {"bool": {"must": [{"term": {"status": "published"}}, eval(str(temp))]}}},
+                                    scroll="10m", size="30")
             else:
                 print(temp)
-                res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query": {"bool": {"must":[{"multi_match": {"query": Search, "fields": ["name", "tags", "content"]}}, {"term": { "status": "published" }}, eval(str(temp)) ]}}}, scroll="10m", size="100")
+                res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query": {"bool": {"must":[{"multi_match": {"query": Search, "fields": ["name", "tags", "content"]}}, {"term": { "status": "published" }}, eval(str(temp)) ]}}}, scroll="10m", size="30",)
 
             doc={}
 

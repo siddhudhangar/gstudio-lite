@@ -100,7 +100,7 @@ educationalsubject_filters=(
 
 
 class SearchTextForm(forms.Form):
-    SearchText = forms.CharField(label='Search', max_length=100)
+    SearchText = forms.CharField(required=False, label='Search', max_length=200)
     filter_field = forms.ChoiceField(label='Filters', choices=main_filters)
     educational_filter_field = forms.ChoiceField(label='Educational level', choices=educationallevel_filters)
     target_group_filter_field = forms.ChoiceField(label='Target Group', choices=target_group_filters)
