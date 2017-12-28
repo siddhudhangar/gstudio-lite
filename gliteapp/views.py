@@ -92,9 +92,9 @@ def search(request):
 
 
 
-            if (( Search not in [None, ''] and selected_filters['filter_field'] == 'all' or selected_filters['filter_field'] == 'videos' or selected_filters['filter_field'] == 'audios' or selected_filters['filter_field'] == 'documents' or selected_filters['filter_field'] == 'images')
+            if (( Search not in [None, ''] and (selected_filters['filter_field'] == 'all' or selected_filters['filter_field'] == 'videos' or selected_filters['filter_field'] == 'audios' or selected_filters['filter_field'] == 'documents' or selected_filters['filter_field'] == 'images'))
                  and educational_filter_field == 'sel' and target_group_filter_field == 'stg' and source_filter_field == 'ss' and language_filter_field == 'sl' and educationalsubject_filter_field == 'ses'):
-
+                print('first if block')
                 res = es.search(index="gstudio-lite", doc_type=filter_field, body={"query": { "multi_match":{ "query": Search, "fields": [ "name", "tags","content" ]}  } }
                             ,scroll="10m",size="30")
 
